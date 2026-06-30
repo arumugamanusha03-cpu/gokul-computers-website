@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
-}
+const MONGODB_URI = process.env.MONGODB_URI;
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -15,13 +11,21 @@ declare global {
   var mongoose: MongooseCache | undefined;
 }
 
-const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+const cached: MongooseCache = global.mongoose || {
+  conn: null,
+  promise: null,
+};
 
 if (!global.mongoose) {
   global.mongoose = cached;
 }
 
-async function connectDB(): Promise<typeof mongoose> {
+async function connectDB(): Promise<typeof mongoose | null> {
+  if (!MONGODB_URI) {
+    console.log('Demo mode - MongoDB disabled');
+    return null;
+  }
+
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
